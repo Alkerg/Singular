@@ -9,28 +9,36 @@ public class TelekinesisAbility : AbilityBase
     public Rigidbody grabbedObject;
     public float throwForce = 300f;
     private Coroutine _moveToHandCoroutine;
-    private Outline outline;
+    private LayerMask _grabbableLayerMask;
+    public Outline _currentObjectOutline;
 
     public override void Start()
     {
         base.Start();
+        _grabbableLayerMask = LayerMask.GetMask("GrabbableObject");
+        _currentObjectOutline = null;
     }
 
     void Update()
     {
-        if(Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, range))
+        if(Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, range, _grabbableLayerMask))
         {
-            
             if (hit.collider.CompareTag("GrabbableObject"))
             {
-                outline = hit.collider.GetComponent<Outline>();
-                if (outline != null) outline.enabled = true;
-            }
-            else
-            {
-                if (outline != null) outline.enabled = false;
+                Outline newObjectOutline = hit.collider.GetComponent<Outline>();
+                
+                if (newObjectOutline != _currentObjectOutline)
+                {
+                    DeactiveCurrentOutline();
+                    _currentObjectOutline = newObjectOutline;
+                    ActiveCurrentOutline();
+                }
+
+                return;
             }
         }
+        DeactiveCurrentOutline();
+        _currentObjectOutline = null;
     }
 
     public void GrabObject()
@@ -114,6 +122,22 @@ public class TelekinesisAbility : AbilityBase
             yield return null;
         }
         grabbedObject.transform.SetParent(target);  
+    }
+
+    void DeactiveCurrentOutline()
+    {
+        if(_currentObjectOutline != null)
+        {
+            _currentObjectOutline.enabled = false;
+        }
+    }
+
+    void ActiveCurrentOutline()
+    {
+        if(_currentObjectOutline != null)
+        {
+            _currentObjectOutline.enabled = true;
+        }
     }
 
     void OnDrawGizmos()

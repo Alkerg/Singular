@@ -2,6 +2,14 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+public enum PlayerState
+{
+    Idle,
+    Walking,
+    Sprinting,
+    Aiming
+}
+
 public class PlayerMovement : MonoBehaviour
 {
     private Rigidbody _rb;
@@ -12,7 +20,9 @@ public class PlayerMovement : MonoBehaviour
     private float _sprintSpeed = 9f;
     private bool _isAiming;
     private Transform _cam => Camera.main.transform;
-    Vector3 _cachedAimDir;
+    private Vector3 _cachedAimDir;
+    private Animator _animator;
+    private PlayerState _currentState;
 
     public CinemachineCamera freeLookCamera;
     public CinemachineCamera thirdPersonAimCamera;
@@ -21,8 +31,10 @@ public class PlayerMovement : MonoBehaviour
     {
         _rb = GetComponent<Rigidbody>();
         _playerInput = GetComponent<PlayerInput>();
+        _animator = GetComponent<Animator>();
         _playerInput.actions.FindActionMap("Global").Enable();
         _speed = _normalSpeed;
+        _currentState = PlayerState.Idle;
     }
 
 
@@ -30,23 +42,45 @@ public class PlayerMovement : MonoBehaviour
     {
         _moveInput = _playerInput.actions["Move"].ReadValue<Vector2>();
 
+        if (_currentState == PlayerState.Idle && _moveInput.sqrMagnitude > 0.01f)
+        {
+            _currentState = PlayerState.Walking;
+            _animator.SetBool("isWalking", true);
+        }
+        else if (_currentState == PlayerState.Walking && _moveInput.sqrMagnitude <= 0.01f)
+        {
+            _currentState = PlayerState.Idle;
+            _animator.SetBool("isWalking", false);
+        }
     }
 
     void LateUpdate()
     {
+        /* Vector3 aimDir = thirdPersonAimCamera.transform.forward;
+        aimDir.y = 0f;
+        
+        if (_isAiming && aimDir.sqrMagnitude > 0.001f)
+        {
+            _rb.MoveRotation(Quaternion.LookRotation(aimDir));
+        }  */
+
         if (_isAiming)
         {
-            _cachedAimDir = thirdPersonAimCamera.transform.forward;
-            _cachedAimDir.y = 0f;
-        }
-
-        if (_isAiming && _cachedAimDir.sqrMagnitude > 0.001f)
-        {
-            Vector3 aimDir = thirdPersonAimCamera.transform.forward;
+            Vector3 aimDir = _cam.forward;
             aimDir.y = 0f;
-            _rb.MoveRotation(Quaternion.LookRotation(aimDir));
-        } 
+
+            if (aimDir.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(aimDir);
+                _rb.MoveRotation(Quaternion.Slerp(
+                    _rb.rotation,
+                    targetRotation,
+                    15f * Time.deltaTime
+                ));
+            }
+        }
     }
+
 
     void FixedUpdate()
     {
@@ -68,8 +102,6 @@ public class PlayerMovement : MonoBehaviour
                 0.2f
             );
         }
-
-        
    
     }
 
@@ -83,6 +115,9 @@ public class PlayerMovement : MonoBehaviour
         if (context.performed)
         {
             _isAiming = true;
+
+            thirdPersonAimCamera.transform.position = freeLookCamera.transform.position;
+            thirdPersonAimCamera.transform.rotation = freeLookCamera.transform.rotation;
 
             freeLookCamera.Priority = 0;
             thirdPersonAimCamera.Priority = 10;

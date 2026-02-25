@@ -3,6 +3,7 @@ using UnityEngine;
 public class EnemyBase : MonoBehaviour
 {
     public HealthManager _healthManager;
+    public GameObject healthFragmentGroupPrefab;
     public virtual void Start()
     {
         _healthManager = GetComponent<HealthManager>();
@@ -20,6 +21,8 @@ public class EnemyBase : MonoBehaviour
 
     private void Die()
     {
+        var healthFragments = FragmentPool.Instance.Get(healthFragmentGroupPrefab);
+        healthFragments.Activate(transform.position, transform.rotation, Vector3.one, Vector3.one, 0.3f, 0.3f, 0.2f, 0.2f, false);
         Destroy(gameObject);
     }
 
@@ -28,7 +31,7 @@ public class EnemyBase : MonoBehaviour
         _healthManager.TakeDamage(damage);
     }
 
-/*     public void OnCollisionEnter(Collision collision)
+    /*public void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("GrabbableObject"))
         {

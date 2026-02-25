@@ -31,7 +31,7 @@ public class FragmentedObject : MonoBehaviour
         _prefabKey = prefabKey;
     }
 
-    public void Activate(Vector3 position, Quaternion rotation, Vector3 hitPoint, Vector3 hitForce, float explosionForce, float explosionRadius, float upward, float torque)
+    public void Activate(Vector3 position, Quaternion rotation, Vector3 hitPoint, Vector3 hitForce, float explosionForce, float explosionRadius, float upward, float torque, bool selfDestruct = true)
     {
         transform.position = position;
         transform.rotation = rotation;
@@ -45,6 +45,8 @@ public class FragmentedObject : MonoBehaviour
             rb.AddExplosionForce(explosionForce + hitForce.magnitude, hitPoint, explosionRadius, upward, ForceMode.Impulse);
             rb.AddTorque(Random.onUnitSphere * torque, ForceMode.Impulse);
         }
+        
+        if (!selfDestruct) return;
 
         CancelInvoke();
         Invoke(nameof(ReturnToPool), _lifeTime);

@@ -18,7 +18,14 @@ public class FragmentPool : MonoBehaviour
 
     void Awake()
     {
-        Instance = this;
+        if(Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
 
         foreach (var config in initialPools)
         {
@@ -43,7 +50,7 @@ public class FragmentPool : MonoBehaviour
 
     public FragmentedObject Get(GameObject prefab)
     {
-         if (!_pools.ContainsKey(prefab))
+        if (!_pools.ContainsKey(prefab))
         {
             CreatePool(prefab, 5);
         }

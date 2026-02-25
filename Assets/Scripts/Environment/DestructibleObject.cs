@@ -49,7 +49,7 @@ public class DestructibleObject : MonoBehaviour, IDestructible
 
         var fragments = FragmentPool.Instance.Get(fragmentedObjectPrefab);
 
-        fragments.Activate(transform.position, transform.rotation, hitPoint, hitForce, _explosionForce, _explosionRadius, _upwardModifier, _torque);
+        fragments.Activate(transform.position, transform.rotation, hitPoint, hitForce, _explosionForce, _explosionRadius, _upwardModifier, _torque, true);
 
         Destroy(gameObject);
     }
