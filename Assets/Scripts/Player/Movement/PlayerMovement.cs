@@ -15,15 +15,25 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody _rb;
     private PlayerInput _playerInput;
     private Vector2 _moveInput;
+    private Vector2 _lookInput;
     private float _speed;
     private float _normalSpeed = 7f;
     private float _sprintSpeed = 9f;
     private bool _isAiming;
     private Transform _cam => Camera.main.transform;
-    private Vector3 _cachedAimDir;
     private Animator _animator;
     private PlayerState _currentState;
+    private float _pitch;
 
+    [Header("Look Settings")]
+    [SerializeField] private float _lookSensitivity = 0.15f;
+    [SerializeField] private float _minPitch = -30f;
+    [SerializeField] private float _maxPitch = 60f;
+
+    [Header("Camera Target")]
+    [SerializeField] private Transform _cameraTarget;
+
+    [Header("Cinemachine Cameras")]
     public CinemachineCamera freeLookCamera;
     public CinemachineCamera thirdPersonAimCamera;
 
@@ -41,6 +51,7 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         _moveInput = _playerInput.actions["Move"].ReadValue<Vector2>();
+        _lookInput = _playerInput.actions["Look"].ReadValue<Vector2>();
 
         if (_currentState == PlayerState.Idle && _moveInput.sqrMagnitude > 0.01f)
         {
@@ -52,48 +63,46 @@ public class PlayerMovement : MonoBehaviour
             _currentState = PlayerState.Idle;
             _animator.SetBool("isWalking", false);
         }
+
+        // Rotating the player based on look input when aiming
+        if (_isAiming)
+        {
+            // Rotating player on Y axis (left and right looking)
+            float yRotation = _lookInput.x * _lookSensitivity;
+            //transform.Rotate(Vector3.up, yRotation);
+            _rb.MoveRotation(_rb.rotation * Quaternion.Euler(0f, yRotation, 0f));
+
+            // Rotating camera target on X axis (up and down looking)
+            _pitch -= _lookInput.y * _lookSensitivity;
+            _pitch = Mathf.Clamp(_pitch, _minPitch, _maxPitch);
+            _cameraTarget.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
+
+
     }
 
     void LateUpdate()
     {
-        /* Vector3 aimDir = thirdPersonAimCamera.transform.forward;
-        aimDir.y = 0f;
         
-        if (_isAiming && aimDir.sqrMagnitude > 0.001f)
-        {
-            _rb.MoveRotation(Quaternion.LookRotation(aimDir));
-        }  */
-
-        if (_isAiming)
-        {
-            Vector3 aimDir = _cam.forward;
-            aimDir.y = 0f;
-
-            if (aimDir.sqrMagnitude > 0.001f)
-            {
-                Quaternion targetRotation = Quaternion.LookRotation(aimDir);
-                _rb.MoveRotation(Quaternion.Slerp(
-                    _rb.rotation,
-                    targetRotation,
-                    15f * Time.deltaTime
-                ));
-            }
-        }
     }
 
 
     void FixedUpdate()
     {
+        // Get camera's forward and right vectors
         Vector3 camForward = _cam.forward;
         Vector3 camRight = _cam.right;
 
         camForward.y = 0;
         camRight.y = 0;
 
+        // Calculate movement direction based on input and camera orientation
         Vector3 movement = camForward.normalized * _moveInput.y + camRight.normalized * _moveInput.x;
 
+        // Apply X, Z movement to player
         _rb.linearVelocity = movement * _speed;
 
+        // Rotate player to face movement direction if not aiming
         if (!_isAiming && movement.sqrMagnitude > 0.01f)
         {
             transform.rotation = Quaternion.Slerp(
@@ -102,22 +111,23 @@ public class PlayerMovement : MonoBehaviour
                 0.2f
             );
         }
+
+
    
     }
 
     public void OnSprint(InputAction.CallbackContext context)
     {
+        // Toggle player's speed between normal and sprinting based on input
         _speed = context.performed ? _sprintSpeed : _normalSpeed;
     }
 
     public void OnAim(InputAction.CallbackContext context)
     {
         if (context.performed)
-        {
+        {  
+            // Set aiming camera priority
             _isAiming = true;
-
-            thirdPersonAimCamera.transform.position = freeLookCamera.transform.position;
-            thirdPersonAimCamera.transform.rotation = freeLookCamera.transform.rotation;
 
             freeLookCamera.Priority = 0;
             thirdPersonAimCamera.Priority = 10;
@@ -125,6 +135,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (context.canceled)
         {
+            // Set free look camera priority
             _isAiming = false;
 
             freeLookCamera.Priority = 10;

@@ -31,6 +31,8 @@ public class HealthManager : MonoBehaviour
 
     public void Heal(float amount)
     {
+        if (_currentHealth == _maxHealth) return;
+        
         _currentHealth += amount;
         _currentHealth = Mathf.Clamp(_currentHealth, 0, _maxHealth);
         OnHealthChanged?.Invoke(_currentHealth);
