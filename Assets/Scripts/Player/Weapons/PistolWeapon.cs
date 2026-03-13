@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class PistolWeapon : WeaponBase
 {
-    void Start()
+    public override void Start()
     {
-        
+        base.Start();
     }
 
     void Update()
@@ -14,7 +14,7 @@ public class PistolWeapon : WeaponBase
 
     public override void Shoot()
     {
-        // TODO
+        base.Shoot();
     }
 
     public override void Reload()

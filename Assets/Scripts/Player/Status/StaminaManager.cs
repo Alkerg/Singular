@@ -24,7 +24,7 @@ public class StaminaManager : MonoBehaviour
         {
             StopCoroutine(autoRecoverStaminaCoroutine);
         }
-        autoRecoverStaminaCoroutine = StartCoroutine(AutoRecoverStamina(10f, 3f, 1f));
+        autoRecoverStaminaCoroutine = StartCoroutine(AutoRecoverStamina(3f, 4f));
     }
 
     public void RecoverStamina(float amount)
@@ -34,13 +34,17 @@ public class StaminaManager : MonoBehaviour
         OnStaminaChanged?.Invoke(_currentStamina);
     }
 
-    IEnumerator AutoRecoverStamina(float recoverAmount,float initialDelay, float delay)
+    IEnumerator AutoRecoverStamina(float initialDelay, float timeToFill)
     {
         yield return new WaitForSeconds(initialDelay);
-        while (_currentStamina < _maxStamina)
+        float elapsedTime = 0f;
+        float startingStamina = _currentStamina;
+        while (elapsedTime < timeToFill)
         {
-            RecoverStamina(recoverAmount);
-            yield return new WaitForSeconds(delay);
+            elapsedTime += Time.deltaTime;
+            _currentStamina = Mathf.Lerp(startingStamina, _maxStamina, elapsedTime / timeToFill);
+            OnStaminaChanged?.Invoke(_currentStamina);
+            yield return null;
         }
     }
 

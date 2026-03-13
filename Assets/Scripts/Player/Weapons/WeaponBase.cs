@@ -9,8 +9,19 @@ public interface IWeapon
 public abstract class WeaponBase : MonoBehaviour, IWeapon
 {
     public WeaponData weaponData;
+    public WeaponIKData weaponIKData;
+    public Transform rightHandController;
+    public Transform leftHandController;
+    public AudioSource audioSource;
 
-    public abstract void Shoot();
+    public virtual void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
+    public virtual void Shoot()
+    {
+        audioSource.PlayOneShot(weaponData.shootSound);
+    }
 
     public abstract void Reload();
 }

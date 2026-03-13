@@ -11,16 +11,22 @@ public class TelekinesisAbility : AbilityBase
     private Coroutine _moveToHandCoroutine;
     private LayerMask _grabbableLayerMask;
     public Outline _currentObjectOutline;
+    public WeaponIKData weaponIKData;
+    private PlayerMovement _playerMovement;
 
     public override void Start()
     {
         base.Start();
+        _playerMovement = GetComponent<PlayerMovement>();
         _grabbableLayerMask = LayerMask.GetMask("GrabbableObject");
         _currentObjectOutline = null;
     }
 
     void Update()
     {
+        if(_playerMovement._currentState == PlayerState.Dead) return;
+
+         // If player is currently grabbing an object, update its position to follow the hand
         if(Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, range, _grabbableLayerMask))
         {
             if (hit.collider.CompareTag("GrabbableObject"))
@@ -45,18 +51,25 @@ public class TelekinesisAbility : AbilityBase
     {
         // Launch raycast from camera
         if(Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, range))
+        {
+            // Check if hit object is grabbable            
+            if (hit.collider.CompareTag("GrabbableObject"))
             {
-                // Check if hit object is grabbable            
-                if (hit.collider.CompareTag("GrabbableObject"))
-                {
-                    // Get rigidbody of hit object and make it kinematic to disable physics interactions
-                    grabbedObject = hit.collider.GetComponent<Rigidbody>();
-                    grabbedObject.isKinematic = true;
-                    // Move object to player's hand and consume stamina
-                    _moveToHandCoroutine = StartCoroutine(MoveToPlayerHand(handTransform));
-                    staminaManager.TakeStamina(staminaNeeded);
-                }
+                 // Get rigidbody of hit object and make it kinematic to disable physics interactions
+                grabbedObject = hit.collider.GetComponent<Rigidbody>();
+                grabbedObject.isKinematic = true;
+                // Move object to player's hand and consume stamina
+                _moveToHandCoroutine = StartCoroutine(MoveToPlayerHand(handTransform));
+                staminaManager.TakeStamina(staminaNeeded);
+
+                /* _playerMovement.leftHandIK.weight = 1f;
+                _playerMovement.leftHandController.localPosition = weaponIKData.leftHandControllerPosition;
+                _playerMovement.leftHandController.localRotation = Quaternion.Euler(weaponIKData.leftHandControllerRotation); 
+
+                _playerMovement.leftHandHint.localPosition = weaponIKData.leftHandHintPosition;
+                _playerMovement.leftHandHint.localRotation = Quaternion.Euler(weaponIKData.leftHandHintRotation); */
             }
+        }
     }
 
     public void ThrowObject()

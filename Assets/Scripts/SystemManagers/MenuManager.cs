@@ -6,7 +6,7 @@ public class MenuManager : MonoBehaviour
 {
     public void LoadStartScene()
     {
-        SceneManager.LoadScene("SampleScene");
+        SceneManager.LoadScene("Level1");
     }
 
     public void LoadScene(string sceneName)

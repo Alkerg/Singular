@@ -10,7 +10,7 @@ public class PauseMenuManager : MonoBehaviour
 
     void Start()
     {
-        
+        _playerInput = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerInput>();
     }
 
     void Update()

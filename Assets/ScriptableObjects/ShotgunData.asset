@@ -16,3 +16,4 @@ MonoBehaviour:
   fireRate: 1
   range: 15
   ammo: 10
+  shootSound: {fileID: 8300000, guid: a37650c4ded614e4a89f398972f0549d, type: 3}

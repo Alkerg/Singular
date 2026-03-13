@@ -10,7 +10,6 @@ public class HealthManager : MonoBehaviour
     public event Action<float> OnHealthChanged;
     public event Action OnPlayerDeath;
 
-
     void Start()
     {
         _currentHealth = _maxHealth;

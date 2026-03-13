@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class SubmachinegunWeapon : WeaponBase
 {
-    void Start()
+    public override void Start()
     {
-        
+        base.Start();
     }
 
     void Update()
